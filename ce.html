@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🏟️ Arena Sensorial 3D · Esportes para Autistas</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Quicksand', sans-serif;
+            background: radial-gradient(circle at 20% 30%, #0a1f2e, #030b12);
+            color: white;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 0 20px #00a6ff, 0 0 40px #0077ff;
+        }
+        h1 {
+            font-size: 3.2rem;
+            margin: 0;
+            letter-spacing: 4px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #a0d0ff, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px #0099ff;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            letter-spacing: 6px;
+            color: #b0e0ff;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            background: rgba(0, 20, 40, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 12px 24px;
+            border-radius: 40px;
+            border-left: 4px solid #00c8ff;
+            color: #e0f0ff;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 0 30px rgba(0,160,255,0.3);
+        }
+        #status-badge {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            background: rgba(0, 30, 50, 0.8);
+            backdrop-filter: blur(5px);
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: #8ecfff;
+            border: 1px solid #2f9fff;
+            pointer-events: none;
+            z-index: 10;
+            font-weight: 500;
+        }
+        /* Painel lateral de informações */
+        #info-panel {
+            position: absolute;
+            top: 120px;
+            right: -420px; /* escondido inicialmente */
+            width: 380px;
+            max-width: 85vw;
+            background: rgba(8, 25, 45, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 32px 0 0 32px;
+            padding: 25px;
+            color: #e2f0ff;
+            border: 1px solid #2f9fff;
+            border-right: none;
+            box-shadow: -10px 10px 40px rgba(0,0,0,0.7), 0 0 30px #0066ff33;
+            transition: right 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 20;
+            max-height: 70vh;
+            overflow-y: auto;
+            pointer-events: auto;
+        }
+        #info-panel.open {
+            right: 0;
+        }
+        #info-panel h2 {
+            margin-top: 0;
+            color: #9cd0ff;
+            border-bottom: 2px solid #2f9fff;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #info-panel h3 {
+            color: #b8dcff;
+            margin: 18px 0 8px;
+        }
+        #info-panel .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #aacfff;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0 8px;
+            transition: 0.2s;
+        }
+        #info-panel .close-btn:hover {
+            color: white;
+            text-shadow: 0 0 15px #3f9eff;
+        }
+        #info-panel .tech-badge {
+            display: inline-block;
+            background: #0a3858;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            border: 1px solid #2f9fff;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        /* Efeito hover no canvas (brilho) */
+        #canvas-container:hover {
+            box-shadow: inset 0 0 50px #0099ff, 0 0 60px #0055aa;
+        }
+        /* Scroll personalizado */
+        #info-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        #info-panel::-webkit-scrollbar-thumb {
+            background: #2f9fff;
+            border-radius: 10px;
+        }
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; }
+        }
+        /* Indicador de clique na arena */
+        .glow-hint {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #0099ff22 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 5;
+            animation: pulseGlow 2.5s infinite;
+        }
+        @keyframes pulseGlow {
+            0% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h1>⚡ ARENA SENSORIAL 3D ⚡</h1>
+        <div class="subtitle">ESPORTES · AUTISMO · TECNOLOGIA</div>
+    </div>
+    <div id="instructions">
+        <span style="font-size:1.4rem; margin-right:8px;">🖱️</span> Passe o mouse: brilho · Clique na arena: <strong>vista superior interativa</strong><br>
+        <span style="font-size:0.9rem; opacity:0.8;">Clique nas áreas para descobrir Física, Robótica e Programação</span>
+    </div>
+    <div id="status-badge">
+        <span id="view-mode-text">🏟️ Vista Frontal</span>
+    </div>
+    <div class="glow-hint"></div>
+
+    <!-- Painel de informações (deslizante) -->
+    <div id="info-panel">
+        <button class="close-btn" onclick="closePanel()">✕</button>
+        <div id="panel-content">
+            <h2>🧩 Informações da Área</h2>
+            <p id="area-title" style="font-weight:bold; font-size:1.3rem;">Selecione uma área</p>
+            <div id="area-details">
+                <p>Clique em qualquer setor da arena (vista superior) para ver como a <strong>Física, Robótica e Programação</strong> tornam o esporte acessível para atletas autistas.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <!-- Three.js Libraries -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // --- Configuração da Cena ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = null; // transparente para mostrar o fundo CSS neon
+        // Adiciona névoa azul
+        scene.fog = new THREE.FogExp2(0x030b12, 0.008);
+
+        // Câmera (inicia vista frontal)
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(8, 4, 16);
+        camera.lookAt(0, 0, 0);
+
+        // Renderers
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // CSS2 Renderer para labels
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';  // permite clicar através dos labels
+        container.appendChild(labelRenderer.domElement);
+
+        // Controles (serão habilitados apenas no modo vista superior)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enabled = false;
+        controls.enablePan = true;
+        controls.enableZoom = true;
+        controls.maxPolarAngle = Math.PI / 2.2;
+        controls.target.set(0, 0.5, 0);
+
+        // --- Iluminação Neon / Ambiente ---
+        const ambientLight = new THREE.AmbientLight(0x404066);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xbfe4ff, 1.2);
+        dirLight.position.set(5, 12, 8);
+        dirLight.castShadow = true;
+        dirLight.receiveShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        const d = 15;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        dirLight.shadow.camera.near = 1;
+        dirLight.shadow.camera.far = 30;
+        dirLight.shadow.bias = -0.0005;
+        scene.add(dirLight);
+        
+        const fillLight1 = new THREE.PointLight(0x4488ff, 1.5);
+        fillLight1.position.set(-3, 5, 5);
+        scene.add(fillLight1);
+        const fillLight2 = new THREE.PointLight(0x33aaff, 1.2);
+        fillLight2.position.set(4, 3, -6);
+        scene.add(fillLight2);
+        
+        // Luzes coloridas para efeito neon
+        const neonLight1 = new THREE.PointLight(0x2266cc, 2);
+        neonLight1.position.set(0, 5, 10);
+        scene.add(neonLight1);
+        const neonLight2 = new THREE.PointLight(0x44aaff, 1.5);
+        neonLight2.position.set(-5, 3, -5);
+        scene.add(neonLight2);
+
+        // Chão reflexivo
+        const groundGeometry = new THREE.CircleGeometry(20, 32);
+        const groundMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x0a1a2a, 
+            roughness: 0.4, 
+            metalness: 0.1,
+            transparent: true,
+            opacity: 0.9,
+            side: THREE.DoubleSide
+        });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.01;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Grade decorativa
+        const gridHelper = new THREE.GridHelper(40, 20, 0x3399ff, 0x113355);
+        gridHelper.position.y = 0;
+        scene.add(gridHelper);
+
+        // --- Construção da Arena (estilizada) ---
+        const arenaGroup = new THREE.Group();
+        
+        // Ginásio principal (cubo com telhado)
+        const mainBldg = new THREE.Mesh(
+            new THREE.BoxGeometry(5, 2.2, 4),
+            new THREE.MeshStandardMaterial({ color: 0x2a4a6a, roughness: 0.3, metalness: 0.1, emissive: new THREE.Color(0x112233) })
+        );
+        mainBldg.castShadow = true;
+        mainBldg.receiveShadow = true;
+        mainBldg.position.set(-1.5, 1.1, 0.5);
+        arenaGroup.add(mainBldg);
+        
+        // Telhado do ginásio
+        const roof = new THREE.Mesh(
+            new THREE.ConeGeometry(3.2, 0.8, 4),
+            new THREE.MeshStandardMaterial({ color: 0x5a7a9a, roughness: 0.5, emissive: new THREE.Color(0x1a3355) })
+        );
+        roof.rotation.y = Math.PI/4;
+        roof.position.set(-1.5, 2.6, 0.5);
+        roof.castShadow = true;
+        roof.receiveShadow = true;
+        arenaGroup.add(roof);
+        
+        // Detalhe neon na fachada
+        const neonStrip = new THREE.Mesh(
+            new THREE.BoxGeometry(4.8, 0.1, 0.3),
+            new THREE.MeshStandardMaterial({ color: 0x0088ff, emissive: new THREE.Color(0x0066cc), transparent: true, opacity: 0.9 })
+        );
+        neonStrip.position.set(-1.5, 2.0, 2.6);
+        arenaGroup.add(neonStrip);
+        
+        // Piscina (retângulo azul translúcido)
+        const poolBase = new THREE.Mesh(
+            new THREE.BoxGeometry(3.0, 0.2, 2.0),
+            new THREE.MeshStandardMaterial({ color: 0x1a4a6a, roughness: 0.2, metalness: 0.1 })
+        );
+        poolBase.position.set(3.0, 0.1, -1.2);
+        poolBase.receiveShadow = true;
+        poolBase.castShadow = true;
+        arenaGroup.add(poolBase);
+        
+        const water = new THREE.Mesh(
+            new THREE.BoxGeometry(2.6, 0.1, 1.6),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x3a9bd9, 
+                transparent: true, 
+                opacity: 0.75, 
+                emissive: new THREE.Color(0x004488),
+                roughness: 0.1,
+                metalness: 0.3
+            })
+        );
+        water.position.set(3.0, 0.25, -1.2);
+        water.receiveShadow = true;
+        arenaGroup.add(water);
+        
+        // Bordas da piscina (textura tátil representada por pequenos cilindros)
+        for (let i = -1; i <= 1; i+=2) {
+            const border = new THREE.Mesh(
+                new THREE.BoxGeometry(3.2, 0.15, 0.3),
+                new THREE.MeshStandardMaterial({ color: 0xccccdd, roughness: 0.7 })
+            );
+            border.position.set(3.0, 0.2, -1.2 + i*1.15);
+            border.receiveShadow = true;
+            arenaGroup.add(border);
+        }
+        
+        // Pista de atletismo (elipse)
+        const trackMat = new THREE.MeshStandardMaterial({ color: 0x8a6e4b, roughness: 0.8 });
+        const track = new THREE.Mesh(new THREE.TorusGeometry(2.0, 0.4, 16, 50), trackMat);
+        track.rotation.x = Math.PI / 2;
+        track.rotation.z = 0.3;
+        track.position.set(1.8, 0.05, 3.5);
+        track.receiveShadow = true;
+        arenaGroup.add(track);
+        
+        // Linhas da pista
+        const lineMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+        const line1 = new THREE.Mesh(new THREE.TorusGeometry(2.0, 0.05, 8, 50), lineMat);
+        line1.rotation.x = Math.PI / 2;
+        line1.rotation.z = 0.3;
+        line1.position.set(1.8, 0.11, 3.5);
+        arenaGroup.add(line1);
+        
+        // Área de Hipismo (cercado)
+        const hipismoBase = new THREE.Mesh(
+            new THREE.CylinderGeometry(2.2, 2.2, 0.2, 8),
+            new THREE.MeshStandardMaterial({ color: 0x4a6a3a, roughness: 0.9 })
+        );
+        hipismoBase.position.set(-2.5, 0.1, -2.8);
+        hipismoBase.receiveShadow = true;
+        hipismoBase.castShadow = true;
+        arenaGroup.add(hipismoBase);
+        
+        // Cerca (palitos)
+        const postMat = new THREE.MeshStandardMaterial({ color: 0x8b6b4d });
+        const railMat = new THREE.MeshStandardMaterial({ color: 0xbd9e7c });
+        const positions = [
+            [-3.8, 0.4, -3.8], [-1.2, 0.4, -3.8], [-2.5, 0.4, -1.8], [-2.5, 0.4, -4.5]
+        ];
+        positions.forEach(pos => {
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.8), postMat);
+            post.position.set(pos[0], pos[1], pos[2]);
+            post.castShadow = true;
+            post.receiveShadow = true;
+            arenaGroup.add(post);
+        });
+        // Cavalo estilizado (apenas símbolo)
+        const horseGroup = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 1.0), new THREE.MeshStandardMaterial({ color: 0x6a4e3a }));
+        body.position.y = 0.4;
+        body.castShadow = true;
+        body.receiveShadow = true;
+        horseGroup.add(body);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshStandardMaterial({ color: 0x7a5e4a }));
+        head.position.set(0.5, 0.55, 0.3);
+        head.castShadow = true;
+        horseGroup.add(head);
+        horseGroup.position.set(-2.5, 0.3, -2.8);
+        horseGroup.rotation.y = 0.5;
+        arenaGroup.add(horseGroup);
+        
+        scene.add(arenaGroup);
+
+        // --- Adicionar Labels CSS (nomes das áreas) ---
+        function createLabel(text, position, fontSize = '16px') {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = '#cce6ff';
+            div.style.fontSize = fontSize;
+            div.style.fontWeight = 'bold';
+            div.style.textShadow = '0 0 15px #0066ff';
+            div.style.background = 'rgba(10,30,50,0.7)';
+            div.style.padding = '4px 14px';
+            div.style.borderRadius = '20px';
+            div.style.backdropFilter = 'blur(5px)';
+            div.style.border = '1px solid #2f9fff';
+            div.style.pointerEvents = 'none';
+            const label = new CSS2DObject(div);
+            label.position.copy(position);
+            return label;
+        }
+
+        scene.add(createLabel('🏊 PISCINA', new THREE.Vector3(3.0, 1.0, -1.2), '15px'));
+        scene.add(createLabel('🏀 GINÁSIO', new THREE.Vector3(-1.5, 3.2, 0.5), '15px'));
+        scene.add(createLabel('🏃 ATLETISMO', new THREE.Vector3(1.8, 1.0, 3.5), '15px'));
+        scene.add(createLabel('🐴 HIPISMO', new THREE.Vector3(-2.5, 1.5, -2.8), '15px'));
+
+        // --- Variáveis de estado ---
+        let isTopView = false;
+        const frontCamPos = new THREE.Vector3(8, 4, 16);
+        const topCamPos = new THREE.Vector3(0, 12, 0.1);
+        const frontTarget = new THREE.Vector3(0, 0.5, 0);
+        
+        // Raycaster para interação
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        renderer.domElement.addEventListener('mousemove', (e) => {
+            if (!isTopView) return;
+            mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+            mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+        });
+
+        // Objetos interativos (áreas)
+        const interactiveObjects = [
+            { mesh: water, area: 'piscina' },
+            { mesh: mainBldg, area: 'ginasio' },
+            { mesh: track, area: 'atletismo' },
+            { mesh: hipismoBase, area: 'hipismo' }
+        ];
+
+        // Conteúdo do painel
+        const areaData = {
+            piscina: {
+                title: '🏊 Natação Sensorial',
+                physics: 'Acústica subaquática: sons são amortecidos. Bordas texturizadas (miçangas) estimulam tato e propriocepção.',
+                robotics: 'Sensor de batimento cardíaco na touca (biofeedback) avisa equipe via LED discreto.',
+                programming: 'App de rotina visual: sequência de aquecimento com pictogramas para previsibilidade.'
+            },
+            ginasio: {
+                title: '🏀 Basquete / Vôlei / Futsal',
+                physics: 'Iluminação difusa (sem flicker) e piso fosco evitam sobrecarga visual. Fone ANC cancela gritos da torcida.',
+                robotics: 'Semáforo sensorial (Arduino) indica nível de ruído: verde (calmo), amarelo (usar fone), azul (pausa).',
+                programming: 'Placar com emojis 😊 😐 🥵 substitui sons de apito e buzina.'
+            },
+            atletismo: {
+                title: '🏃 Atletismo & Pista Tátil',
+                physics: 'Piso com zonas de textura (velcro, bolha, tecido) para autorregulação durante corrida.',
+                robotics: 'Vibração no chão (motor) substitui tiro de largada, evitando susto.',
+                programming: 'Cronômetro visual com luzes coloridas (sem som).'
+            },
+            hipismo: {
+                title: '🐴 Equoterapia / Empirismo',
+                physics: 'Movimento tridimensional do cavalo estimula sistema vestibular e equilíbrio.',
+                robotics: 'Pulseira de monitoramento cardíaco que acalma o cavalo se detectar ansiedade.',
+                programming: 'QR Code leva a app com rotina de cuidados com o cavalo (previsibilidade).'
+            }
+        };
+
+        function showAreaInfo(areaId) {
+            const data = areaData[areaId];
+            if (!data) return;
+            document.getElementById('area-title').innerHTML = data.title;
+            const detailsDiv = document.getElementById('area-details');
+            detailsDiv.innerHTML = `
+                <p><span class="tech-badge">⚛️ FÍSICA</span> ${data.physics}</p>
+                <p><span class="tech-badge">🤖 ROBÓTICA</span> ${data.robotics}</p>
+                <p><span class="tech-badge">💻 PROGRAMAÇÃO</span> ${data.programming}</p>
+                <p style="margin-top:15px;"><em>🧩 Adaptado exclusivamente para atletas autistas.</em></p>
+            `;
+            document.getElementById('info-panel').classList.add('open');
+        }
+
+        window.closePanel = function() {
+            document.getElementById('info-panel').classList.remove('open');
+        };
+
+        // Interação de clique
+        renderer.domElement.addEventListener('click', (e) => {
+            if (!isTopView) {
+                // Primeiro clique: muda para vista superior
+                isTopView = true;
+                controls.enabled = true;
+                camera.position.copy(topCamPos);
+                controls.target.set(0, 0.5, 0);
+                controls.update();
+                document.getElementById('view-mode-text').innerHTML = '🔽 Vista Superior · Clique nas áreas';
+                document.querySelector('.glow-hint').style.display = 'none';
+                
+                // Animar transição suave (opcional)
+            } else {
+                // Modo interativo: detectar objeto clicado
+                mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+                mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+                
+                raycaster.setFromCamera(mouse, camera);
+                const meshes = interactiveObjects.map(obj => obj.mesh);
+                const intersects = raycaster.intersectObjects(meshes);
+                if (intersects.length > 0) {
+                    const hit = intersects[0].object;
+                    const entry = interactiveObjects.find(obj => obj.mesh === hit);
+                    if (entry) {
+                        showAreaInfo(entry.area);
+                    }
+                }
+            }
+        });
+
+        // Efeito hover no canvas (já temos CSS, mas podemos adicionar emissivo nos objetos no futuro)
+        
+        // Animação
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Pequeno efeito de brilho nos objetos quando não está em top view (opcional)
+            if (!isTopView) {
+                // Leve rotação automática? Não, mas podemos dar um leve balanço nas luzes
+                const time = Date.now() * 0.001;
+                neonLight1.intensity = 2 + Math.sin(time * 2) * 0.3;
+                neonLight2.intensity = 1.5 + Math.cos(time * 1.7) * 0.2;
+            }
+            
+            controls.update();
+            
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Pequeno ajuste: ativar CSS pointer-events nos labels? Já está none.
+        
+        console.log('✨ Arena Sensorial 3D carregada! Passe o mouse, clique para explorar.');
+    </script>
+</body>
+</html>

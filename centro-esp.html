@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🏟️ Centro Esportivo para Atletas Especiais</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Quicksand', sans-serif;
+            background: radial-gradient(circle at 20% 30%, #0a1f2e, #030b12);
+            color: white;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 0 20px #00a6ff, 0 0 40px #0077ff;
+        }
+        h1 {
+            font-size: 3.2rem;
+            margin: 0;
+            letter-spacing: 4px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #a0d0ff, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px #0099ff;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            letter-spacing: 6px;
+            color: #b0e0ff;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            background: rgba(0, 20, 40, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 12px 24px;
+            border-radius: 40px;
+            border-left: 4px solid #00c8ff;
+            color: #e0f0ff;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 0 30px rgba(0,160,255,0.3);
+        }
+        #status-badge {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            background: rgba(0, 30, 50, 0.8);
+            backdrop-filter: blur(5px);
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: #8ecfff;
+            border: 1px solid #2f9fff;
+            pointer-events: none;
+            z-index: 10;
+            font-weight: 500;
+        }
+        /* Painel de informações (modo foco) - maior e com vídeo */
+        #focus-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            background: rgba(5, 20, 35, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 40px;
+            border: 2px solid #2f9fff;
+            box-shadow: 0 0 80px #0066ff66;
+            color: #e2f0ff;
+            z-index: 30;
+            display: none;
+            flex-direction: row;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+        #focus-panel.open {
+            display: flex;
+        }
+        .panel-left {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .panel-right {
+            flex: 1;
+            padding: 20px;
+            background: #0a1a2a;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-right h3 {
+            margin-top: 0;
+            color: #9cd0ff;
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 2px solid #2f9fff;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .close-focus {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #1a3e60;
+            border: 2px solid #2f9fff;
+            color: white;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            z-index: 31;
+        }
+        .close-focus:hover {
+            background: #2f6a9e;
+            box-shadow: 0 0 20px #00aaff;
+            transform: scale(1.1);
+        }
+        .tech-badge {
+            display: inline-block;
+            background: #0a3858;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #2f9fff;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        /* Scroll personalizado */
+        .panel-left::-webkit-scrollbar {
+            width: 6px;
+        }
+        .panel-left::-webkit-scrollbar-thumb {
+            background: #2f9fff;
+            border-radius: 10px;
+        }
+        @media (max-width: 700px) {
+            #focus-panel {
+                flex-direction: column;
+                height: 90vh;
+            }
+            h1 { font-size: 2rem; }
+        }
+        /* Indicador de hover nos objetos (será feito via three.js) */
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h1>⚡ ARENA SENSORIAL 3D ⚡</h1>
+        <div class="subtitle">ESPORTES · AUTISMO · TECNOLOGIA</div>
+    </div>
+    <div id="instructions">
+        <span style="font-size:1.4rem; margin-right:8px;">🖱️</span> Passe o mouse sobre as áreas · Clique para explorar em detalhe<br>
+        <span style="font-size:0.9rem; opacity:0.8;">Cada clique leva você para dentro da modalidade</span>
+    </div>
+    <div id="status-badge">
+        <span id="view-mode-text">🏟️ Vista Frontal · Clique na arena para começar</span>
+    </div>
+
+    <!-- Painel de foco (tela cheia) -->
+    <div id="focus-panel">
+        <button class="close-focus" onclick="closeFocusPanel()">✕</button>
+        <div class="panel-left" id="focus-content">
+            <!-- preenchido via JS -->
+        </div>
+        <div class="panel-right" id="focus-video">
+            <!-- vídeo será inserido aqui -->
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <!-- Three.js Libraries -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // --- Configuração da Cena ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = null;
+        scene.fog = new THREE.FogExp2(0x030b12, 0.008);
+
+        // Câmera
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(8, 4, 16);
+        camera.lookAt(0, 0, 0);
+
+        // Renderers
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        container.appendChild(labelRenderer.domElement);
+
+        // Controles
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enabled = false;
+        controls.enablePan = true;
+        controls.enableZoom = true;
+        controls.maxPolarAngle = Math.PI / 2.2;
+        controls.target.set(0, 0.5, 0);
+
+        // Iluminação
+        const ambientLight = new THREE.AmbientLight(0x404066);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xbfe4ff, 1.2);
+        dirLight.position.set(5, 12, 8);
+        dirLight.castShadow = true;
+        dirLight.receiveShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        const d = 15;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        dirLight.shadow.camera.near = 1;
+        dirLight.shadow.camera.far = 30;
+        dirLight.shadow.bias = -0.0005;
+        scene.add(dirLight);
+        
+        const fillLight1 = new THREE.PointLight(0x4488ff, 1.5);
+        fillLight1.position.set(-3, 5, 5);
+        scene.add(fillLight1);
+        const fillLight2 = new THREE.PointLight(0x33aaff, 1.2);
+        fillLight2.position.set(4, 3, -6);
+        scene.add(fillLight2);
+        const neonLight1 = new THREE.PointLight(0x2266cc, 2);
+        neonLight1.position.set(0, 5, 10);
+        scene.add(neonLight1);
+        const neonLight2 = new THREE.PointLight(0x44aaff, 1.5);
+        neonLight2.position.set(-5, 3, -5);
+        scene.add(neonLight2);
+
+        // Chão
+        const groundGeometry = new THREE.CircleGeometry(20, 32);
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x0a1a2a, roughness: 0.4, metalness: 0.1, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.01;
+        ground.receiveShadow = true;
+        scene.add(ground);
+        const gridHelper = new THREE.GridHelper(40, 20, 0x3399ff, 0x113355);
+        gridHelper.position.y = 0;
+        scene.add(gridHelper);
+
+        // --- Construção da Arena ---
+        const arenaGroup = new THREE.Group();
+        
+        // Ginásio
+        const mainBldg = new THREE.Mesh(new THREE.BoxGeometry(5, 2.2, 4), new THREE.MeshStandardMaterial({ color: 0x2a4a6a, roughness: 0.3, metalness: 0.1, emissive: new THREE.Color(0x112233) }));
+        mainBldg.castShadow = true; mainBldg.receiveShadow = true;
+        mainBldg.position.set(-1.5, 1.1, 0.5);
+        arenaGroup.add(mainBldg);
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(3.2, 0.8, 4), new THREE.MeshStandardMaterial({ color: 0x5a7a9a, roughness: 0.5, emissive: new THREE.Color(0x1a3355) }));
+        roof.rotation.y = Math.PI/4;
+        roof.position.set(-1.5, 2.6, 0.5);
+        roof.castShadow = true; roof.receiveShadow = true;
+        arenaGroup.add(roof);
+        
+        // Piscina
+        const poolBase = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.2, 2.0), new THREE.MeshStandardMaterial({ color: 0x1a4a6a }));
+        poolBase.position.set(3.0, 0.1, -1.2);
+        poolBase.receiveShadow = true; poolBase.castShadow = true;
+        arenaGroup.add(poolBase);
+        const water = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.1, 1.6), new THREE.MeshStandardMaterial({ color: 0x3a9bd9, transparent: true, opacity: 0.75, emissive: new THREE.Color(0x004488) }));
+        water.position.set(3.0, 0.25, -1.2);
+        water.receiveShadow = true;
+        arenaGroup.add(water);
+        
+        // Pista
+        const track = new THREE.Mesh(new THREE.TorusGeometry(2.0, 0.4, 16, 50), new THREE.MeshStandardMaterial({ color: 0x8a6e4b }));
+        track.rotation.x = Math.PI / 2; track.rotation.z = 0.3;
+        track.position.set(1.8, 0.05, 3.5);
+        track.receiveShadow = true;
+        arenaGroup.add(track);
+        
+        // Hipismo
+        const hipismoBase = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 0.2, 8), new THREE.MeshStandardMaterial({ color: 0x4a6a3a }));
+        hipismoBase.position.set(-2.5, 0.1, -2.8);
+        hipismoBase.receiveShadow = true; hipismoBase.castShadow = true;
+        arenaGroup.add(hipismoBase);
+        
+        scene.add(arenaGroup);
+
+        // Labels
+        function createLabel(text, position) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = '#cce6ff';
+            div.style.fontSize = '16px';
+            div.style.fontWeight = 'bold';
+            div.style.textShadow = '0 0 15px #0066ff';
+            div.style.background = 'rgba(10,30,50,0.7)';
+            div.style.padding = '4px 14px';
+            div.style.borderRadius = '20px';
+            div.style.backdropFilter = 'blur(5px)';
+            div.style.border = '1px solid #2f9fff';
+            div.style.pointerEvents = 'none';
+            const label = new CSS2DObject(div);
+            label.position.copy(position);
+            return label;
+        }
+        scene.add(createLabel('🏊 PISCINA', new THREE.Vector3(3.0, 1.0, -1.2)));
+        scene.add(createLabel('🏀 GINÁSIO', new THREE.Vector3(-1.5, 3.2, 0.5)));
+        scene.add(createLabel('🏃 ATLETISMO', new THREE.Vector3(1.8, 1.0, 3.5)));
+        scene.add(createLabel('🐴 HIPISMO', new THREE.Vector3(-2.5, 1.5, -2.8)));
+
+        // --- Estado e interatividade ---
+        let isTopView = false;
+        const frontCamPos = new THREE.Vector3(8, 4, 16);
+        const topCamPos = new THREE.Vector3(0, 12, 0.1);
+        
+        // Objetos interativos com propriedades originais para hover
+        const interactiveMeshes = [
+            { mesh: water, area: 'piscina', originalScale: 1, hoverScale: 1.1, originalEmissive: new THREE.Color(0x004488) },
+            { mesh: mainBldg, area: 'ginasio', originalScale: 1, hoverScale: 1.05, originalEmissive: new THREE.Color(0x112233) },
+            { mesh: track, area: 'atletismo', originalScale: 1, hoverScale: 1.1, originalEmissive: new THREE.Color(0x000000) },
+            { mesh: hipismoBase, area: 'hipismo', originalScale: 1, hoverScale: 1.1, originalEmissive: new THREE.Color(0x000000) }
+        ];
+
+        // Dados para o painel foco
+        const areaDetails = {
+            piscina: {
+                title: '🏊 Natação Sensorial',
+                desc: 'Ambiente aquático com bordas texturizadas e iluminação âmbar calmante.',
+                physics: 'Acústica subaquática reduz ruídos; bordas com miçangas estimulam tato e propriocepção.',
+                robotics: 'Sensor de batimentos na touca (biofeedback) que aciona LED discreto para equipe.',
+                programming: 'App de rotina com pictogramas: aquecimento, nado, descanso.',
+                videoId: 'VIcL7nzO6LQ' // Exemplo: Cancelamento de ruído
+            },
+            ginasio: {
+                title: '🏀 Ginásio Poliesportivo',
+                desc: 'Quadras adaptadas com piso fosco, placar de emojis e semáforo sensorial.',
+                physics: 'Iluminação difusa (sem flicker) e piso sem reflexo. Fone ANC cancela ruídos da torcida.',
+                robotics: 'Semáforo sensorial (Arduino): verde (calmo), amarelo (usar fone), azul (pausa).',
+                programming: 'Placar com emojis substitui apitos; QR code com escala de treino.',
+                videoId: '82xVWXyO8E4' // Exemplo sensor batimentos
+            },
+            atletismo: {
+                title: '🏃 Atletismo & Pista Tátil',
+                desc: 'Pista com zonas de textura variável e sistema de vibração para largada.',
+                physics: 'Zonas de textura (velcro, bolha, tecido) para autorregulação durante a corrida.',
+                robotics: 'Vibração no piso (motor) substitui o tiro de largada, evitando sustos.',
+                programming: 'Cronômetro visual com luzes coloridas, sem som.',
+                videoId: 'dQw4w9WgXcQ' // placeholder
+            },
+            hipismo: {
+                title: '🐴 Equoterapia / Empirismo',
+                desc: 'Espaço de conexão com cavalos, cercado natural e sombra.',
+                physics: 'Movimento tridimensional do cavalo estimula sistema vestibular e equilíbrio.',
+                robotics: 'Pulseira de monitoramento cardíaco que acalma o cavalo se detectar ansiedade.',
+                programming: 'App de cuidados com cavalo: rotina previsível com pictogramas.',
+                videoId: 'dQw4w9WgXcQ'
+            }
+        };
+
+        // Hover: escala e brilho
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let hoveredObj = null;
+        
+        renderer.domElement.addEventListener('mousemove', (e) => {
+            if (!isTopView) return;
+            mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+            mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const meshes = interactiveMeshes.map(m => m.mesh);
+            const intersects = raycaster.intersectObjects(meshes);
+            
+            // Resetar hover anterior
+            if (hoveredObj) {
+                const entry = interactiveMeshes.find(m => m.mesh === hoveredObj);
+                if (entry) {
+                    entry.mesh.scale.set(1,1,1);
+                    if (entry.mesh.material.emissive) entry.mesh.material.emissive.copy(entry.originalEmissive);
+                }
+                hoveredObj = null;
+            }
+            
+            if (intersects.length > 0) {
+                const hit = intersects[0].object;
+                const entry = interactiveMeshes.find(m => m.mesh === hit);
+                if (entry) {
+                    hoveredObj = hit;
+                    hit.scale.set(entry.hoverScale, entry.hoverScale, entry.hoverScale);
+                    if (hit.material) {
+                        if (Array.isArray(hit.material)) {
+                            hit.material.forEach(mat => { if (mat.emissive) mat.emissive.setHex(0x4488ff); });
+                        } else {
+                            if (hit.material.emissive) hit.material.emissive.setHex(0x4488ff);
+                        }
+                    }
+                }
+            }
+        });
+
+        // Clique: alterna vista ou abre foco
+        renderer.domElement.addEventListener('click', (e) => {
+            if (!isTopView) {
+                // Primeiro clique: sobe para vista superior
+                isTopView = true;
+                controls.enabled = true;
+                camera.position.copy(topCamPos);
+                controls.target.set(0, 0.5, 0);
+                controls.update();
+                document.getElementById('view-mode-text').innerHTML = '🔽 Vista Superior · Clique nas áreas para detalhes';
+                return;
+            }
+            
+            // Modo interativo: detectar área clicada
+            mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+            mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const meshes = interactiveMeshes.map(m => m.mesh);
+            const intersects = raycaster.intersectObjects(meshes);
+            if (intersects.length > 0) {
+                const hit = intersects[0].object;
+                const entry = interactiveMeshes.find(m => m.mesh === hit);
+                if (entry) {
+                    openFocusPanel(entry.area);
+                }
+            }
+        });
+
+        // Funções do painel foco
+        function openFocusPanel(areaId) {
+            const data = areaDetails[areaId];
+            if (!data) return;
+            
+            // Preencher conteúdo
+            const contentDiv = document.getElementById('focus-content');
+            contentDiv.innerHTML = `
+                <h2 style="color:#9cd0ff; margin-top:0;">${data.title}</h2>
+                <p style="font-size:1.1rem;">${data.desc}</p>
+                <h3> -Física-</h3>
+                <p>${data.physics}</p>
+                <h3> -Robótica-</h3>
+                <p>${data.robotics}</p>
+                <h3> -Programação-</h3>
+                <p>${data.programming}</p>
+                <p><span class="tech-badge">🧩 Exclusivo para atletas autistas</span></p>
+            `;
+            
+            const videoDiv = document.getElementById('focus-video');
+            videoDiv.innerHTML = `
+                <h3> Vídeo Explicativo</h3>
+                <div class="video-container">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/${data.videoId}?autoplay=1&mute=1" 
+                        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                <p style="margin-top:10px;"><small>Vídeo demonstrativo relacionado à tecnologia aplicada.</small></p>
+            `;
+            
+            // Animar câmera para posição da área (opcional)
+            let targetPos;
+            switch(areaId) {
+                case 'piscina': targetPos = new THREE.Vector3(3.5, 3, -0.5); break;
+                case 'ginasio': targetPos = new THREE.Vector3(-2, 3, 2); break;
+                case 'atletismo': targetPos = new THREE.Vector3(2, 3, 4); break;
+                case 'hipismo': targetPos = new THREE.Vector3(-3, 2.5, -3); break;
+                default: targetPos = topCamPos;
+            }
+            
+            // Transição suave da câmera (simples)
+            camera.position.copy(targetPos);
+            controls.target.set(targetPos.x, targetPos.y-1, targetPos.z);
+            controls.update();
+            
+            document.getElementById('focus-panel').classList.add('open');
+            document.getElementById('view-mode-text').innerHTML = `📍 ${data.title} · Detalhes`;
+        }
+
+        window.closeFocusPanel = function() {
+            document.getElementById('focus-panel').classList.remove('open');
+            // Voltar para vista superior
+            camera.position.copy(topCamPos);
+            controls.target.set(0, 0.5, 0);
+            controls.update();
+            document.getElementById('view-mode-text').innerHTML = '🔽 Vista Superior · Clique nas áreas para detalhes';
+            
+            // Parar vídeo (simples recriação)
+            document.getElementById('focus-video').innerHTML = '';
+        };
+
+        // Animação
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        console.log('✨ Arena Sensorial 3D com hover e foco por área!');
+    </script>
+</body>
+</html>
